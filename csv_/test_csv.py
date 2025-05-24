@@ -31,7 +31,9 @@ def test_csv_get_rows(tmp_path: Path):
     with CSV(str(file_path)) as csv:
         rows = list(csv.get_rows())
         assert len(rows) == 2
-        assert rows[0] == { "id": "1", "name": "John Doe",
+        assert rows[0] == {
+            "id": "1",
+            "name": "John Doe",
             "department": "Engineering",
             "hours_worked": "40",
             "hourly_rate": "50",
@@ -55,7 +57,8 @@ def test_csv_multiple_files(tmp_path: Path):
         rows = list(csv.get_rows())
         assert len(rows) == 4
         assert rows[0] == {
-            "id": "1", "name": "John Doe",
+            "id": "1",
+            "name": "John Doe",
             "department": "Engineering",
             "hours_worked": "40",
             "hourly_rate": "50",
