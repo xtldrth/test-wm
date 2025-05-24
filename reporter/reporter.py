@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 PADDING_BETWEEN_FIELDS = 4
 
 
-class Report(dict[str, list[dict[str, Any]]]):
+class Report(dict[str, list[dict[str, Any] | dict[Any, Any]]]):
     def __init__(self, *args, compute_total_for: set[str] | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.total_values = self._compute_total_values(compute_total_for)
@@ -17,15 +17,22 @@ class Report(dict[str, list[dict[str, Any]]]):
     def _get_max_fields_len(self) -> dict[str, int]:
         max_fields_len = dict()
         for department in self.values():
-            # computing max fields len
-            for employee in department:
-                for field, value in employee.items():
+            if isinstance(department, list):
+                # computing max fields len
+                for employee in department:
+                    for field, value in employee.items():
+                        max_fields_len[field] = max(
+                            max_fields_len.get(field, 0), len(str(value))
+                        )
+            if isinstance(department, dict):
+                for field, value in department.items():
                     max_fields_len[field] = max(
                         max_fields_len.get(field, 0), len(str(value))
                     )
 
             # getting great length between field name length with other lengths
-            for field_name in department[0].keys():
+            fields = department[0].keys() if isinstance(department, list) else department.keys()
+            for field_name in fields:
                 max_fields_len[field_name] = max(
                     max_fields_len[field_name], len(field_name)
                 )
@@ -61,7 +68,8 @@ class Report(dict[str, list[dict[str, Any]]]):
         department_placeholder_len = (
             max(len(department) for department in self.keys()) + PADDING_BETWEEN_FIELDS
         )
-        fields = list(self.values())[0][0].keys()
+        fields = list(self.values())[0]
+        fields = fields[0].keys() if isinstance(fields, list) else fields.keys()
 
         add_placeholder_and_space = lambda char: char * department_placeholder_len + " "
 
@@ -70,18 +78,25 @@ class Report(dict[str, list[dict[str, Any]]]):
             result_string += f"{field:{max_fields_len[field] + PADDING_BETWEEN_FIELDS}}"
         result_string += "\n"
 
-        for department, employees in self.items():
+        for department, values in self.items():
             result_string += f"{department}\n"
 
-            # print fields of employees
-            for employee in employees:
+            if isinstance(values, list):
+                # print fields of employees
+                for employee in values:
+                    result_string += add_placeholder_and_space("-")
+                    for field, value in employee.items():
+                        result_string += (
+                            f"{str(value):{max_fields_len[field] + PADDING_BETWEEN_FIELDS}}"
+                        )
+                    result_string += "\n"
+            if isinstance(values, dict):
                 result_string += add_placeholder_and_space("-")
-                for field, value in employee.items():
+                for field, value in values.items():
                     result_string += (
                         f"{str(value):{max_fields_len[field] + PADDING_BETWEEN_FIELDS}}"
                     )
-                result_string += "\n"
-
+                    result_string += "\n"
             if self.total_values is None:
                 continue
 
